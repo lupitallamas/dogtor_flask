@@ -1,40 +1,73 @@
 from dogtor.db import db
+from sqlalchemy import Integer, String, DateTime, Date
 from sqlalchemy.orm import mapped_column
-from sqlalchemy import Integer, String
-#from datetime import datetime
+
 
 class User(db.Model):
     id = mapped_column(Integer, primary_key=True)
-    username= mapped_column(String, unique=True, nullable=False)
+    username = mapped_column(String, unique=True, nullable=False)
     email = mapped_column(String, unique=True)
-    
+
+
 class Owner(db.Model):
-    id = mapped_column(Integer, primary_key=True)
-    first_name = mapped_column(String(length=50))
-    last_name = mapped_column(String(length=50))
-    phone = mapped_column(String(length=15))
-    mobil = mapped_column(String(length=15))
-    email = mapped_column(String) 
+    """Pet owner object"""
+
+    id = db.Column(Integer, primary_key=True)
+    first_name = db.Column(String(length=50))
+    last_name = db.Column(String(length=50))
+    phone = db.Column(String(length=15))
+    mobile = db.Column(String(length=15))
+    email = db.Column(String)
+    pets = db.relationship("Pet", backref="owner")
+
 
 class Species(db.Model):
-    """Pet Species"""
-    id = mapped_column(Integer, primary_key=True)
-    name = mapped_column(String)
-    
+    """Pet species object"""
+
+    id = db.Column(Integer, primary_key=True)
+    name = db.Column(String(length=20))
+    pet = db.relationship("Pet", backref="species")
+
+
 class Pet(db.Model):
-    """Pet Owner"""
-    id_pet = mapped_column(Integer, primary_key=True)
-    name = mapped_column(String)
-    age = mapped_column(Integer)
-    owner = db.relationship(Owner, backref="pets")
-    species = db.relationship(Species, backref= "pets")
-    #create_at = mapped_column(datetime, d)
-     
+    """Pet object"""
+
+    id = db.Column(Integer, primary_key=True)
+    name = db.Column(String(length=20))
+    owner_id = db.Column(Integer, db.ForeignKey("owner.id"))
+    age = db.Column(Integer)
+    species_id = db.Column(Integer, db.ForeignKey("species.id"))
+    #record_id = db.Column(Integer, db.ForeignKey("record.id"))
+    record = db.relationship("Record", backref="pet")
+    #create_at = db.Column(DateTime)
+
+record_category_m2m = db.Table(
+    "record_category",
+    db.Column("record_id", Integer, db.ForeignKey("record.id")),
+    db.Column("category_id", Integer, db.ForeignKey("category.id")),
+)
+
+
 class Record(db.Model):
-    """Medical record pets""" 
-    id = mapped_column(Integer, primary_key=True)
-    category = mapped_column(String)
-    procedure = mapped_column(String)
-    #date = mapped_column(datetime)
-    pet = db.relationship(Pet, backref="pets")
-    
+    """Pet record object"""
+
+    id = db.Column(Integer, primary_key=True)
+    category = db.Column(String(length=20))
+    procedure = db.Column(String(length=255))
+    pet_id =  db.Column(Integer, db.ForeignKey("pet.id"))
+    category_id= db.Column(Integer, db.ForeignKey("category.id"))
+    #pet = db.relationship("Pet", backref="record")
+    date = db.Column(Date)
+    #categories = db.relationship(
+    #   "Category",  secondary=record_category_m2m, backref="records"
+    #)
+
+
+class Category(db.Model):
+    """Record category object"""
+
+    id = db.Column(Integer, primary_key=True)
+    name = db.Column(String(length=20))
+    records = db.relationship(
+        "Record", secondary=record_category_m2m , backref="categories"
+    )

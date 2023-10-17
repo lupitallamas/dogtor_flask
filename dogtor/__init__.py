@@ -1,4 +1,4 @@
-from flask import Flask, request
+from flask import Flask
 from .api import api
 from .config import Confing
 from .db import db
